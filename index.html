@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字扫雷</title>
+    <title>数字扫雷 - 房间</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>房间</h1>
         <p>你的用户ID: <span id="userId"></span></p>
+        <p>房间ID: <span id="roomIdDisplay"></span></p>
         <div id="userList" class="user-list"></div>
         <button id="refreshButton">刷新</button>
+        <button id="changeRoomButton" onclick="changeRoom()">更换房间</button>
     </div>
+    <!-- 使用 type="module" 支持 ES6 模块导入 -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
