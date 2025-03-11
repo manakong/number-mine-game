@@ -3,19 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字扫雷 - 房间</title>
+    <title>数字排雷</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>房间</h1>
-        <p>你的用户ID: <span id="userId"></span></p>
-        <p>房间ID: <span id="roomIdDisplay"></span></p>
-        <div id="userList" class="user-list"></div>
-        <button id="refreshButton">刷新</button>
-        <button id="changeRoomButton" onclick="changeRoom()">更换房间</button>
+    <!-- 第一页面 -->
+    <div id="page1" class="page">
+        <div class="container">
+            <h1 class="title">数字排雷</h1>
+            <button id="startButton" class="btn">开始游戏</button>
+        </div>
     </div>
-    <!-- 使用 type="module" 支持 ES6 模块导入 -->
+
+    <!-- 第二页面：房间 -->
+    <div id="page2" class="page" style="display: none;">
+        <div class="container">
+            <h1 class="title">房间</h1>
+            <p id="userRole"></p>
+            <p>房间ID: <span id="roomIdDisplay"></span></p>
+            <div id="userList" class="user-list"></div>
+            <button id="refreshButton" class="btn btn-refresh" onclick="refreshUsers()">刷新</button>
+            <button id="changeRoomButton" class="btn" onclick="changeRoom()">更换房间</button>
+        </div>
+    </div>
+
+    <!-- 第三页面：选择位数 -->
+    <div id="page3" class="page" style="display: none;">
+        <div class="container">
+            <h1 class="title">选择数字位数</h1>
+            <select id="digitSelect" class="select">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+            </select>
+            <button onclick="confirmDigit()" class="btn">确认</button>
+        </div>
+    </div>
+
+    <!-- 第四页面：输入数字 -->
+    <div id="page4" class="page" style="display: none;">
+        <div class="container">
+            <h1 class="title">输入你的数字</h1>
+            <div class="grid" id="inputGrid"></div>
+            <div class="keyboard" id="keyboard"></div>
+            <div class="action-buttons">
+                <button onclick="clearInput()" class="btn btn-secondary">清空</button>
+                <button onclick="confirmNumber()" class="btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第五页面：猜数字 -->
+    <div id="page5" class="page" style="display: none;">
+        <div id="gameArea">
+            <div class="target-grid" id="targetGrid"></div>
+            <button onclick="showGuessPopup()" class="btn btn-guess">猜数字</button>
+            <div id="history" class="history"></div>
+            <div class="note-area">
+                <canvas id="noteCanvas" width="200" height="200"></canvas>
+                <div class="canvas-controls">
+                    <button onclick="changePenColor('black')" class="btn btn-small">黑色</button>
+                    <button onclick="changePenColor('red')" class="btn btn-small">红色</button>
+                    <button onclick="clearCanvas()" class="btn btn-small">清除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div id="popup" class="popup" style="display: none;"></div>
+
     <script type="module" src="script.js"></script>
+    <script>
+        console.log('Initial DOM check:', {
+            startButton: document.getElementById('startButton'),
+            page1: document.getElementById('page1')
+        });
+    </script>
 </body>
 </html>
