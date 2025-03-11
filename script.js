@@ -16,12 +16,19 @@ let state = {
 // 初始化用户角色
 state.userRole = localStorage.getItem('userRole') || (Math.random() < 0.5 ? '房主' : '房客');
 localStorage.setItem('userRole', state.userRole);
+console.log('User role:', state.userRole);
 
 // 页面切换
 function showPage(pageNum) {
     document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
-    document.getElementById(`page${pageNum}${state.userRole === '房客' && pageNum === 2 ? '-waiting' : ''}`).style.display = 'block';
-    state.currentPage = pageNum;
+    const targetPage = document.getElementById(`page${pageNum}${state.userRole === '房客' && pageNum === 2 ? '-waiting' : ''}`);
+    if (targetPage) {
+        targetPage.style.display = 'block';
+        state.currentPage = pageNum;
+        console.log(`Switched to page ${pageNum}`);
+    } else {
+        console.error(`Page ${pageNum} not found`);
+    }
 }
 
 // 第一页面：开始游戏
@@ -41,6 +48,7 @@ function updatePage2() {
             <button onclick="selectUser('玩家A')">玩家A</button>
             <button onclick="selectUser('玩家B')">玩家B</button>
         `;
+        console.log('User list updated');
     }
 }
 
