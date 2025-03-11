@@ -7,9 +7,52 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <button id="startButton">数字排雷</button>
+    <div id="page1">
+        <div class="container">
+            <button id="startButton">数字排雷</button>
+        </div>
     </div>
+    <div id="page2" style="display: none;">
+        <div class="container">
+            <h1>寻找好友</h1>
+            <div id="userList"></div>
+        </div>
+    </div>
+    <div id="page3" style="display: none;">
+        <div class="container">
+            <h1>选择数字位数</h1>
+            <select id="digitSelect">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+            </select>
+            <button onclick="confirmDigit()">确认</button>
+        </div>
+    </div>
+    <div id="page4" style="display: none;">
+        <div class="container">
+            <h1>输入你的数字</h1>
+            <div class="grid" id="inputGrid"></div>
+            <div class="keyboard" id="keyboard"></div>
+            <button onclick="clearInput()">清空</button>
+            <button onclick="confirmNumber()">确认</button>
+        </div>
+    </div>
+    <div id="page5" style="display: none;">
+        <div class="container" id="gameArea">
+            <div class="target-grid" id="targetGrid"></div>
+            <button onclick="showGuessPopup()">猜数字</button>
+            <div id="history"></div>
+            <canvas id="noteCanvas" width="200" height="200"></canvas>
+        </div>
+    </div>
+    <div id="popup" style="display: none;"></div>
     <script src="script.js"></script>
 </body>
 </html>
