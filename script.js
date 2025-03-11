@@ -1,265 +1,239 @@
-// 全局变量
-let currentPage = 1;
-let digitCount = 0;
-let playerNumber = '';
-let opponentNumber = '';
-let guessCount = 0;
-let history = [];
-let drawCanvas = null;
-let ctx = null;
-
-// 获取元素
-const pages = document.querySelectorAll('.page');
-const readyPopup = document.getElementById('readyPopup');
-const confirmPopup = document.getElementById('confirmPopup');
-const winPopup = document.getElementById('winPopup');
-const startButton = document.getElementById('startButton');
-const onlineUsers = document.getElementById('onlineUsers');
-const noUsersMessage = document.getElementById('noUsersMessage');
-const networkErrorMessage = document.getElementById('networkErrorMessage');
-const digitSelect = document.getElementById('digitSelect');
-const confirmDigit = document.getElementById('confirmDigit');
-const digitGrid = document.getElementById('digitGrid');
-const keypad = document.getElementById('keypad');
-const confirmNumber = document.getElementById('confirmNumber');
-const guessButton = document.getElementById('guessButton');
-const historyTable = document.getElementById('historyTable').querySelector('tbody');
-const paintColor = document.getElementById('paintColor');
-const paintSize = document.getElementById('paintSize');
-
-// 初始化画布
-function initCanvas() {
-    drawCanvas = document.getElementById('drawCanvas');
-    ctx = drawCanvas.getContext('2d');
-    drawCanvas.addEventListener('mousedown', startDrawing);
-    drawCanvas.addEventListener('mousemove', draw);
-    drawCanvas.addEventListener('mouseup', stopDrawing);
-    drawCanvas.addEventListener('mouseleave', stopDrawing);
-}
-
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-
-function startDrawing(e) {
-    isDrawing = true;
-    [lastX, lastY] = [e.offsetX, e.offsetY];
-}
-
-function draw(e) {
-    if (!isDrawing) return;
-    const x = e.offsetX;
-    const y = e.offsetY;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = paintColor.value;
-    ctx.lineWidth = paintSize.value;
-    ctx.stroke();
-    [lastX, lastY] = [x, y];
-}
-
-function stopDrawing() {
-    isDrawing = false;
-}
-
-// 显示页面
-function showPage(pageNumber) {
-    pages.forEach((page, index) => {
-        if (index + 1 === pageNumber) {
-            page.classList.remove('hidden');
-        } else {
-            page.classList.add('hidden');
-        }
-    });
-    currentPage = pageNumber;
-}
-
-// 第一页面按钮点击事件
-startButton.addEventListener('click', () => {
-    showPage(2);
-    // 模拟在线用户获取
-    setTimeout(() => {
-        // 模拟网络异常
-        if (Math.random() < 0.1) {
-            networkErrorMessage.classList.remove('hidden');
-            return;
-        }
-        // 模拟没有在线用户
-        if (Math.random() < 0.2) {
-            noUsersMessage.classList.remove('hidden');
-            return;
-        }
-        for (let i = 1; i <= 5; i++) {
-            const userDiv = document.createElement('div');
-            userDiv.textContent = `用户${i}`;
-            userDiv.addEventListener('click', () => {
-                readyPopup.style.display = 'flex';
-            });
-            onlineUsers.appendChild(userDiv);
-        }
-    }, 1000);
+// 第一页面跳转
+document.getElementById('startButton').addEventListener('click', () => {
+    showPage2();
 });
 
-// 准备弹窗按钮点击事件
-document.getElementById('readyYes').addEventListener('click', () => {
-    readyPopup.style.display = 'none';
-    if (Math.random() < 0.5) {
-        // 假设自己是房主
-        showPage(3);
+// 页面 2：寻找好友（模拟用户列表）
+function showPage2() {
+    document.body.innerHTML = `
+        <div class="container">
+            <h1>寻找好友</h1>
+            <div id="userList">
+                <button onclick="selectUser('玩家A')">玩家A</button>
+                <button onclick="selectUser('玩家B')">玩家B</button>
+            </div>
+        </div>
+    `;
+}
+
+function selectUser(user) {
+    // 模拟房主选择房客，弹出准备窗口
+    showReadyPopup(user);
+}
+
+function showReadyPopup(user) {
+    document.body.innerHTML += `
+        <div class="popup" id="readyPopup">
+            <h2>准备好了吗？</h2>
+            <button onclick="ready(true, '${user}')">准备好了</button>
+            <button onclick="ready(false, '${user}')">再等一会儿</button>
+        </div>
+    `;
+}
+
+function ready(isReady, user) {
+    const popup = document.getElementById('readyPopup');
+    popup.remove();
+    if (isReady) {
+        // 模拟双方准备好，房主进入第三页面
+        showPage3();
     } else {
-        // 假设自己是房客
-        alert('请稍等，房主在配置游戏选项');
+        showPage2();
     }
-});
+}
 
-document.getElementById('readyNo').addEventListener('click', () => {
-    readyPopup.style.display = 'none';
-    showPage(2);
-});
+// 页面 3：选择位数
+function showPage3() {
+    document.body.innerHTML = `
+        <div class="container">
+            <h1>选择数字位数</h1>
+            <select id="digitSelect">
+                ${Array.from({ length: 9 }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
+            </select>
+            <button onclick="confirmDigit()">确认</button>
+        </div>
+    `;
+}
 
-// 第三页面确认按钮点击事件
-confirmDigit.addEventListener('click', () => {
-    digitCount = parseInt(digitSelect.value);
-    showPage(4);
-    // 生成数字格子
-    digitGrid.innerHTML = '';
-    for (let i = 0; i < digitCount; i++) {
-        const digitDiv = document.createElement('div');
-        digitGrid.appendChild(digitDiv);
+function confirmDigit() {
+    const digits = parseInt(document.getElementById('digitSelect').value);
+    showPage4(digits);
+}
+
+// 页面 4：输入数字
+function showPage4(digits) {
+    document.body.innerHTML = `
+        <div class="container">
+            <h1>输入你的数字</h1>
+            <div class="grid" id="inputGrid"></div>
+            <div class="keyboard" id="keyboard"></div>
+            <button onclick="clearInput()">清空</button>
+            <button onclick="confirmNumber(${digits})">确认</button>
+        </div>
+    `;
+    const grid = document.getElementById('inputGrid');
+    for (let i = 0; i < digits; i++) {
+        grid.innerHTML += `<div class="cell" id="cell-${i}"></div>`;
     }
-    // 生成数字键盘
-    keypad.innerHTML = '';
-    const numbers = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0'];
-    numbers.forEach(num => {
-        const button = document.createElement('button');
-        button.textContent = num;
-        button.dataset.value = num;
-        keypad.appendChild(button);
+    const keyboard = document.getElementById('keyboard');
+    for (let i = 0; i <= 9; i++) {
+        keyboard.innerHTML += `<button onclick="addNumber(${i})">${i}</button>`;
+    }
+    keyboard.innerHTML += `<button onclick="deleteNumber()">删除</button>`;
+}
+
+let currentNumber = [];
+function addNumber(num) {
+    if (currentNumber.length < document.querySelectorAll('.cell').length) {
+        currentNumber.push(num);
+        updateGrid();
+    }
+}
+
+function deleteNumber() {
+    currentNumber.pop();
+    updateGrid();
+}
+
+function clearInput() {
+    currentNumber = [];
+    updateGrid();
+}
+
+function updateGrid() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach((cell, i) => {
+        cell.textContent = currentNumber[i] || '';
     });
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = '删除';
-    deleteBtn.id = 'deleteButton';
-    keypad.appendChild(deleteBtn);
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = '清空';
-    clearBtn.id = 'clearButton';
-    keypad.appendChild(clearBtn);
-});
+}
 
-// 第四页面数字键盘点击事件
-keypad.addEventListener('click', (event) => {
-    if (event.target.tagName === 'BUTTON') {
-        const value = event.target.dataset.value;
-        if (value) {
-            if (playerNumber.length < digitCount) {
-                playerNumber += value;
-                digitGrid.children[playerNumber.length - 1].textContent = value;
-                if (playerNumber.length === digitCount) {
-                    confirmNumber.disabled = false;
-                }
-            }
-        } else if (event.target.id === 'deleteButton') {
-            if (playerNumber.length > 0) {
-                playerNumber = playerNumber.slice(0, -1);
-                digitGrid.children[playerNumber.length].textContent = '';
-                confirmNumber.disabled = true;
-            }
-        } else if (event.target.id === 'clearButton') {
-            playerNumber = '';
-            digitGrid.childNodes.forEach((node) => {
-                node.textContent = '';
-            });
-            confirmNumber.disabled = true;
-        }
+function confirmNumber(digits) {
+    if (currentNumber.length === digits) {
+        showConfirmPopup(currentNumber);
+    } else {
+        alert('请填满所有格子！');
     }
-});
+}
 
-// 确认数字按钮点击事件
-confirmNumber.addEventListener('click', () => {
-    if (playerNumber.length === digitCount) {
-        confirmPopup.style.display = 'flex';
+function showConfirmPopup(number) {
+    document.body.innerHTML += `
+        <div class="popup" id="confirmPopup">
+            <h2>是否确认让对方猜这个号码？</h2>
+            <p>${number.join('')}</p>
+            <button onclick="startGuess('${number.join('')}')">确认</button>
+            <button onclick="cancelConfirm(${digits})">取消</button>
+        </div>
+    `;
+}
+
+function cancelConfirm(digits) {
+    document.getElementById('confirmPopup').remove();
+    showPage4(digits);
+}
+
+// 页面 5：猜数字
+function startGuess(targetNumber) {
+    document.body.innerHTML = `
+        <div class="container" style="display: grid; grid-template-rows: 20% 80%; grid-template-columns: 60% 40%;">
+            <div class="grid" id="targetGrid" style="background: gray;"></div>
+            <button onclick="showGuessPopup(${targetNumber.length})">猜数字</button>
+            <div id="history"></div>
+            <canvas id="noteCanvas" width="200" height="200"></canvas>
+        </div>
+    `;
+    const grid = document.getElementById('targetGrid');
+    for (let i = 0; i < targetNumber.length; i++) {
+        grid.innerHTML += `<div class="cell">${targetNumber[i]}</div>`;
     }
-});
-
-// 确认弹窗按钮点击事件
-document.getElementById('confirmYes').addEventListener('click', () => {
-    confirmPopup.style.display = 'none';
-    showPage(5);
-    // 初始化画布
     initCanvas();
-    // 模拟对方数字
-    opponentNumber = '';
-    for (let i = 0; i < digitCount; i++) {
-        opponentNumber += Math.floor(Math.random() * 10);
-    }
-    const opponentNumberGrid = document.getElementById('opponentNumberGrid');
-    opponentNumberGrid.innerHTML = '';
-    for (let i = 0; i < digitCount; i++) {
-        const digitDiv = document.createElement('div');
-        digitDiv.textContent = '●';
-        opponentNumberGrid.appendChild(digitDiv);
-    }
-});
+}
 
-document.getElementById('confirmNo').addEventListener('click', () => {
-    confirmPopup.style.display = 'none';
-});
+function showGuessPopup(digits) {
+    document.body.innerHTML += `
+        <div class="popup" id="guessPopup">
+            <h2>输入你的猜测</h2>
+            <div class="grid" id="guessGrid"></div>
+            <div class="keyboard" id="guessKeyboard"></div>
+            <button onclick="clearGuess()">清空</button>
+            <button onclick="submitGuess(${digits})">确认</button>
+        </div>
+    `;
+    const grid = document.getElementById('guessGrid');
+    for (let i = 0; i < digits; i++) {
+        grid.innerHTML += `<div class="cell" id="guess-cell-${i}"></div>`;
+    }
+    const keyboard = document.getElementById('guessKeyboard');
+    for (let i = 0; i <= 9; i++) {
+        keyboard.innerHTML += `<button onclick="addGuess(${i})">${i}</button>`;
+    }
+    keyboard.innerHTML += `<button onclick="deleteGuess()">删除</button>`;
+}
 
-// 猜测按钮点击事件
-guessButton.addEventListener('click', () => {
-    let guess = prompt('请输入猜测的数字');
-    if (guess.length === digitCount) {
-        guessCount++;
+let guessNumber = [];
+function addGuess(num) {
+    if (guessNumber.length < document.querySelectorAll('#guessGrid .cell').length) {
+        guessNumber.push(num);
+        updateGuessGrid();
+    }
+}
+
+function deleteGuess() {
+    guessNumber.pop();
+    updateGuessGrid();
+}
+
+function clearGuess() {
+    guessNumber = [];
+    updateGuessGrid();
+}
+
+function updateGuessGrid() {
+    const cells = document.querySelectorAll('#guessGrid .cell');
+    cells.forEach((cell, i) => {
+        cell.textContent = guessNumber[i] || '';
+    });
+}
+
+function submitGuess(digits) {
+    if (guessNumber.length === digits) {
+        const target = document.querySelectorAll('#targetGrid .cell').map(cell => parseInt(cell.textContent));
         let hits = 0;
-        for (let i = 0; i < digitCount; i++) {
-            if (guess[i] === opponentNumber[i]) {
-                hits++;
-            }
+        for (let i = 0; i < digits; i++) {
+            if (guessNumber[i] === target[i]) hits++;
         }
-        history.push({ guess, hits });
-        const row = document.createElement('tr');
-        const seqCell = document.createElement('td');
-        const guessCell = document.createElement('td');
-        const hitsCell = document.createElement('td');
-        seqCell.textContent = guessCount;
-        guessCell.textContent = guess;
-        hitsCell.textContent = hits;
-        row.appendChild(seqCell);
-        row.appendChild(guessCell);
-        row.appendChild(hitsCell);
-        historyTable.appendChild(row);
-        if (hits === digitCount) {
-            winPopup.style.display = 'flex';
-            document.getElementById('guessCount').textContent = guessCount;
-            const opponentNumberGrid = document.getElementById('opponentNumberGrid');
-            opponentNumberGrid.childNodes.forEach((node, index) => {
-                node.textContent = opponentNumber[index];
-            });
+        document.getElementById('guessPopup').innerHTML += `
+            <p>命中：${hits}</p>
+            <button onclick="closeGuessPopup('${guessNumber.join('')}', ${hits}, ${digits})">确认</button>
+        `;
+        if (hits === digits) {
+            document.getElementById('targetGrid').style.opacity = '1';
+            document.body.innerHTML += `<h1>恭喜您猜对了！用了${document.getElementById('history').children.length + 1}次</h1>`;
         }
-    } else {
-        alert('请输入正确位数的数字');
     }
-});
+}
 
-// 胜利弹窗按钮点击事件
-document.getElementById('restartButton').addEventListener('click', () => {
-    winPopup.style.display = 'none';
-    showPage(1);
-    // 重置变量
-    currentPage = 1;
-    digitCount = 0;
-    playerNumber = '';
-    opponentNumber = '';
-    guessCount = 0;
-    history = [];
-    digitGrid.innerHTML = '';
-    keypad.innerHTML = '';
-    historyTable.innerHTML = '';
-    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-});
+function closeGuessPopup(guess, hits, digits) {
+    document.getElementById('guessPopup').remove();
+    const history = document.getElementById('history');
+    history.innerHTML += `<p>${history.children.length + 1}. ${guess} - 命中: ${hits}</p>`;
+    guessNumber = [];
+}
 
-document.getElementById('backButton').addEventListener('click', () => {
-    winPopup.style.display = 'none';
-    showPage(1);
-});
+// 画笔功能
+function initCanvas() {
+    const canvas = document.getElementById('noteCanvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mousemove', (e) => {
+        if (drawing) {
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+    });
+}
