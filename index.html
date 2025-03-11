@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字排雷</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- 第一页面 -->
+    <div id="page1" class="page">
+        <h1 class="title">数字排雷游戏</h1>
+        <button id="startButton" class="btn">开始游戏</button>
+    </div>
+
+    <!-- 第二页面 -->
+    <div id="page2" class="page hidden">
+        <h1 class="title">寻找好友</h1>
+        <div id="onlineUsers" class="user-list"></div>
+        <p id="noUsersMessage" class="hidden">当前没有在线玩家，请稍后再试</p>
+        <p id="networkErrorMessage" class="hidden">网络连接失败，请检查网络</p>
+    </div>
+
+    <!-- 准备弹窗 -->
+    <div id="readyPopup" class="popup hidden">
+        <h2 class="popup-title">准备好了吗？</h2>
+        <button id="readyYes" class="btn">准备好了</button>
+        <button id="readyNo" class="btn">再等一会儿</button>
+    </div>
+
+    <!-- 第三页面 -->
+    <div id="page3" class="page hidden">
+        <h1 class="title">选择数字位数</h1>
+        <label for="digitSelect">位数：</label>
+        <select id="digitSelect" class="select">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+        </select>
+        <button id="confirmDigit" class="btn">确认</button>
+    </div>
+
+    <!-- 第四页面 -->
+    <div id="page4" class="page hidden">
+        <h1 class="title">输入数字</h1>
+        <p class="hint">请输入所选位数的数字</p>
+        <div id="digitGrid" class="digit-grid"></div>
+        <div id="keypad" class="keypad"></div>
+        <button id="confirmNumber" class="btn" disabled>确认</button>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirmPopup" class="popup hidden">
+        <h2 class="popup-title">是否确认让对方猜这个号码</h2>
+        <button id="confirmYes" class="btn">确认</button>
+        <button id="confirmNo" class="btn">取消</button>
+    </div>
+
+    <!-- 第五页面 -->
+    <div id="page5" class="page hidden">
+        <div class="top-section">
+            <div class="top-left">
+                <h2 class="sub-title">对方数字</h2>
+                <div id="opponentNumberGrid" class="digit-grid"></div>
+            </div>
+            <div class="top-right">
+                <h2 class="sub-title">猜测数字</h2>
+                <button id="guessButton" class="btn">猜测</button>
+                <div class="paint-settings">
+                    <label for="paintColor">画笔颜色：</label>
+                    <input type="color" id="paintColor" value="#000000">
+                    <label for="paintSize">画笔粗细：</label>
+                    <input type="number" id="paintSize" value="2" min="1">
+                </div>
+            </div>
+        </div>
+        <div class="bottom-section">
+            <div class="bottom-left">
+                <h2 class="sub-title">历史猜测记录</h2>
+                <table id="historyTable" class="history-table">
+                    <thead>
+                        <tr>
+                            <th>序列</th>
+                            <th>历史猜测的数字</th>
+                            <th>命中个数</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="bottom-right">
+                <h2 class="sub-title">画画区域</h2>
+                <canvas id="drawCanvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 胜利弹窗 -->
+    <div id="winPopup" class="popup hidden">
+        <h2 class="popup-title">恭喜您猜对了</h2>
+        <p>本次您用了 <span id="guessCount">0</span> 次</p>
+        <button id="restartButton" class="btn">重新开始</button>
+        <button id="backButton" class="btn">返回主界面</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
