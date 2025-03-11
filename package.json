@@ -1,0 +1,23 @@
+{
+  "name": "number-mine-game",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manakong/number-mine-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manakong/number-mine-game/issues"
+  },
+  "homepage": "https://github.com/manakong/number-mine-game#readme",
+  "description": "",
+  "dependencies": {
+    "firebase": "^11.4.0"
+  }
+}
