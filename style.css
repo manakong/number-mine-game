@@ -85,8 +85,39 @@ body {
     margin-bottom: 20px;
 }
 
+.user-list {
+    margin-top: 20px;
+}
+
+.user-list .user-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.user-list .user-image {
+    width: 40px;
+    height: 40px;
+    background-color: #ccc;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-size: cover;
+    background-position: center;
+}
+
 .user-list button {
-    margin: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.user-list button:hover {
+    background-color: #45a049;
 }
 
 .popup {
