@@ -39,7 +39,7 @@ function initializeUserRole() {
         localStorage.setItem('users', JSON.stringify(existingUsers));
         users.add(state.userId);
     }
-    state.userRole = null; // 角色由房间匹配决定
+    state.userRole = 'pending'; // 初始状态，匹配后确定
     localStorage.setItem('userRole_' + state.userId, 'pending');
     console.log(`User ${state.userId} initialized, total users: ${existingUsers.length}`);
     showPage(2); // 直接进入房间页面
@@ -94,8 +94,8 @@ function initializeEventListeners() {
 function updatePage2() {
     const userRoleDisplay = document.getElementById('userRole');
     if (userRoleDisplay) {
-        userRoleDisplay.textContent = `你的用户ID: ${state.userId.slice(-4)}`;
-        console.log('User ID displayed:', state.userId.slice(-4));
+        userRoleDisplay.textContent = `你的用户ID: ${state.userId.slice(-4)} | 角色: ${state.userRole || '未匹配'}`;
+        console.log('User role displayed:', state.userRole || 'pending');
     } else {
         console.error('userRole element not found');
     }
@@ -107,10 +107,12 @@ function updatePage2() {
         existingUsers.forEach(userId => {
             const userImage = getRandomImage();
             const isSelf = userId === state.userId;
+            const role = localStorage.getItem('userRole_' + userId) || 'pending';
+            const className = isSelf ? 'self' : (role === 'host' ? 'host' : '');
             userList.innerHTML += `
-                <div class="user-item ${isSelf ? 'self' : ''}">
+                <div class="user-item ${className}">
                     <div class="user-image" style="background-image: url('${userImage}');"></div>
-                    <button onclick="${isSelf ? '' : `selectUser('${userId}')`}">玩家${userId.slice(-4)}</button>
+                    <button onclick="${isSelf ? '' : `selectUser('${userId}')`}">玩家${userId.slice(-4)} (${role})</button>
                 </div>
             `;
         });
@@ -149,11 +151,12 @@ function selectUser(targetUserId) {
 
 // 匹配逻辑
 function match(targetUserId) {
+    state.userRole = 'host'; // 发起匹配的用户为房主
     state.game.hostReady = true;
     localStorage.setItem('userRole_' + state.userId, 'host');
     localStorage.setItem('userRole_' + targetUserId, 'guest');
     showPopup('<h2>等待对方确认...</h2>');
-    console.log(`${state.userId.slice(-4)} matched with ${targetUserId.slice(-4)}`);
+    console.log(`${state.userId.slice(-4)} (host) matched with ${targetUserId.slice(-4)} (guest)`);
     setTimeout(() => {
         if (!state.game.guestReady) {
             state.game.guestReady = true; // 模拟对方准备
@@ -168,6 +171,7 @@ function match(targetUserId) {
             }
         }
     }, 2000); // 2秒后模拟匹配完成
+    updatePage2(); // 刷新显示新角色
 }
 
 // 确认数字位数
@@ -373,14 +377,19 @@ function updateHistory() {
 
 // 重置游戏
 function resetGame() {
-    state.game = {
-        hostReady: false,
-        guestReady: false,
-        digits: 0,
-        targetNumber: [],
-        guessHistory: [],
-        guessNumber: [],
-        penColor: 'black'
+    state = {
+        currentPage: 1,
+        userRole: null,
+        userId: null,
+        game: {
+            hostReady: false,
+            guestReady: false,
+            digits: 0,
+            targetNumber: [],
+            guessHistory: [],
+            guessNumber: [],
+            penColor: 'black'
+        }
     };
     currentNumber = [];
     localStorage.clear();
@@ -448,7 +457,7 @@ function clearCanvas() {
     const canvas = document.getElementById('noteCanvas');
     const ctx = canvas?.getContext('2d');
     if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
 
