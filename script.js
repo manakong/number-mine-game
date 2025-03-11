@@ -24,7 +24,7 @@ let state = {
     userRole: null,
     userId: null,
     roomId: "defaultRoom",
-    matchedUserId: null, // 记录匹配的用户ID
+    matchedUserId: null,
     game: {
         hostReady: false,
         guestReady: false,
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logInitialState();
     enterRoom();
     listenUserList();
-    listenGameState(); // 监听游戏状态变化
+    listenGameState();
 });
 
 // 初始化用户
@@ -359,7 +359,7 @@ function startGuess() {
     showPage(5);
     updateTargetGrid();
     initCanvas();
-    syncGameState(); // 同步目标数字到Firebase
+    syncGameState();
 }
 
 // 更新目标网格
@@ -438,7 +438,7 @@ function submitGuess() {
         }
         state.game.guessHistory.push({ guess: state.game.guessNumber.join(''), hits });
         updateHistory();
-        syncGameState(); // 同步猜测历史
+        syncGameState();
         if (hits === state.game.digits) {
             const targetGrid = document.getElementById('targetGrid');
             if (targetGrid) {
