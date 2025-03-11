@@ -1,38 +1,69 @@
-let currentPage = 1;
-let gameState = { hostReady: false, guestReady: false, digits: 0, targetNumber: [] };
-let guessHistory = [];
-let guessNumber = [];
+// 全局状态
+let state = {
+    currentPage: 1,
+    userRole: null,
+    game: {
+        hostReady: false,
+        guestReady: false,
+        digits: 0,
+        targetNumber: [],
+        guessHistory: [],
+        guessNumber: [],
+        penColor: 'black'
+    }
+};
 
+// 初始化用户角色
+state.userRole = localStorage.getItem('userRole') || (Math.random() < 0.5 ? '房主' : '房客');
+localStorage.setItem('userRole', state.userRole);
+
+// 页面切换
 function showPage(pageNum) {
-    document.querySelectorAll('div[id^="page"]').forEach(page => page.style.display = 'none');
-    document.getElementById(`page${pageNum}`).style.display = 'block';
-    currentPage = pageNum;
+    document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+    document.getElementById(`page${pageNum}${state.userRole === '房客' && pageNum === 2 ? '-waiting' : ''}`).style.display = 'block';
+    state.currentPage = pageNum;
 }
 
-document.getElementById('startButton').addEventListener('click', () => showPage(2));
-
-function showPage2() {
+// 第一页面：开始游戏
+document.getElementById('startButton').addEventListener('click', () => {
     showPage(2);
-    const userList = document.getElementById('userList');
-    userList.innerHTML = '<button onclick="selectUser(\'玩家A\')">玩家A</button><button onclick="selectUser(\'玩家B\')">玩家B</button>';
+    updatePage2();
+});
+
+// 第二页面：寻找好友
+function updatePage2() {
+    const userRoleDisplay = document.getElementById('userRole');
+    userRoleDisplay.textContent = `你的角色是：${state.userRole}`;
+    
+    if (state.userRole === '房主') {
+        const userList = document.getElementById('userList');
+        userList.innerHTML = `
+            <button onclick="selectUser('玩家A')">玩家A</button>
+            <button onclick="selectUser('玩家B')">玩家B</button>
+        `;
+    }
 }
 
 function selectUser(user) {
-    gameState.hostReady = false;
-    gameState.guestReady = false;
-    showPopup(`<h2>准备好了吗？</h2><button onclick="ready(true, '${user}')">准备好了</button><button onclick="ready(false, '${user}')">再等一会儿</button>`);
+    state.game.hostReady = false;
+    state.game.guestReady = false;
+    showPopup(`
+        <h2>准备好了吗？</h2>
+        <button onclick="ready(true, '${user}')">准备好了</button>
+        <button onclick="ready(false, '${user}')">再等一会儿</button>
+    `);
 }
 
 function ready(isReady, user) {
     if (isReady) {
-        if (gameState.hostReady && gameState.guestReady) {
+        if (state.game.hostReady && state.game.guestReady) {
             closePopup();
             showPage(3);
         } else {
-            gameState.hostReady = true;
+            state.game.hostReady = true;
             showPopup('<h2>等待对方准备...</h2>');
             setTimeout(() => {
-                gameState.guestReady = true;
+                state.game.guestReady = true;
                 closePopup();
                 showPage(3);
             }, 1000); // 模拟对方准备
@@ -40,19 +71,23 @@ function ready(isReady, user) {
     } else {
         closePopup();
         showPage(2);
+        updatePage2();
     }
 }
 
+// 第三页面：选择位数
 function confirmDigit() {
-    gameState.digits = parseInt(document.getElementById('digitSelect').value);
+    state.game.digits = parseInt(document.getElementById('digitSelect').value);
     showPage(4);
     updateInputGrid();
 }
 
+// 第四页面：输入数字
+let currentNumber = [];
 function updateInputGrid() {
     const grid = document.getElementById('inputGrid');
     grid.innerHTML = '';
-    for (let i = 0; i < gameState.digits; i++) {
+    for (let i = 0; i < state.game.digits; i++) {
         grid.innerHTML += `<div class="cell" id="cell-${i}"></div>`;
     }
     const keyboard = document.getElementById('keyboard');
@@ -60,12 +95,14 @@ function updateInputGrid() {
     for (let i = 0; i <= 9; i++) {
         keyboard.innerHTML += `<button onclick="addNumber(${i})">${i}</button>`;
     }
-    keyboard.innerHTML += `<button onclick="deleteNumber()">删除</button><button onclick="clearInput()">清空</button>`;
+    keyboard.innerHTML += `
+        <button onclick="deleteNumber()">删除</button>
+        <button onclick="clearInput()">清空</button>
+    `;
 }
 
-let currentNumber = [];
 function addNumber(num) {
-    if (currentNumber.length < gameState.digits) {
+    if (currentNumber.length < state.game.digits) {
         currentNumber.push(num);
         updateCells();
     }
@@ -83,13 +120,21 @@ function clearInput() {
 
 function updateCells() {
     const cells = document.querySelectorAll('#inputGrid .cell');
-    cells.forEach((cell, i) => cell.textContent = currentNumber[i] || '');
+    cells.forEach((cell, i) => {
+        cell.textContent = currentNumber[i] || '';
+        cell.classList.toggle('filled', !!currentNumber[i]);
+    });
 }
 
 function confirmNumber() {
-    if (currentNumber.length === gameState.digits) {
-        gameState.targetNumber = [...currentNumber];
-        showPopup(`<h2>是否确认让对方猜这个号码？</h2><p>${currentNumber.join('')}</p><button onclick="startGuess()">确认</button><button onclick="cancelConfirm()">取消</button>`);
+    if (currentNumber.length === state.game.digits) {
+        state.game.targetNumber = [...currentNumber];
+        showPopup(`
+            <h2>是否确认让对方猜这个号码？</h2>
+            <p>${currentNumber.join('')}</p>
+            <button onclick="startGuess()">确认</button>
+            <button onclick="cancelConfirm()">取消</button>
+        `);
     } else {
         alert('请填满所有格子！');
     }
@@ -99,6 +144,7 @@ function cancelConfirm() {
     closePopup();
 }
 
+// 第五页面：猜数字
 function startGuess() {
     closePopup();
     showPage(5);
@@ -109,13 +155,13 @@ function startGuess() {
 function updateTargetGrid() {
     const grid = document.getElementById('targetGrid');
     grid.innerHTML = '';
-    for (let i = 0; i < gameState.digits; i++) {
-        grid.innerHTML += `<div class="cell">${gameState.targetNumber[i]}</div>`;
+    for (let i = 0; i < state.game.digits; i++) {
+        grid.innerHTML += `<div class="cell">${state.game.targetNumber[i]}</div>`;
     }
 }
 
 function showGuessPopup() {
-    guessNumber = [];
+    state.game.guessNumber = [];
     showPopup(`
         <h2>输入你的猜测</h2>
         <div class="grid" id="guessGrid"></div>
@@ -124,7 +170,7 @@ function showGuessPopup() {
         <button onclick="submitGuess()">确认</button>
     `);
     const grid = document.getElementById('guessGrid');
-    for (let i = 0; i < gameState.digits; i++) {
+    for (let i = 0; i < state.game.digits; i++) {
         grid.innerHTML += `<div class="cell" id="guess-cell-${i}"></div>`;
     }
     const keyboard = document.getElementById('guessKeyboard');
@@ -135,66 +181,102 @@ function showGuessPopup() {
 }
 
 function addGuess(num) {
-    if (guessNumber.length < gameState.digits) {
-        guessNumber.push(num);
+    if (state.game.guessNumber.length < state.game.digits) {
+        state.game.guessNumber.push(num);
         updateGuessCells();
     }
 }
 
 function deleteGuess() {
-    guessNumber.pop();
+    state.game.guessNumber.pop();
     updateGuessCells();
 }
 
 function clearGuess() {
-    guessNumber = [];
+    state.game.guessNumber = [];
     updateGuessCells();
 }
 
 function updateGuessCells() {
     const cells = document.querySelectorAll('#guessGrid .cell');
-    cells.forEach((cell, i) => cell.textContent = guessNumber[i] || '');
+    cells.forEach((cell, i) => {
+        cell.textContent = state.game.guessNumber[i] || '';
+        cell.classList.toggle('filled', !!state.game.guessNumber[i]);
+    });
 }
 
 function submitGuess() {
-    if (guessNumber.length === gameState.digits) {
-        const target = gameState.targetNumber;
+    if (state.game.guessNumber.length === state.game.digits) {
+        const target = state.game.targetNumber;
         let hits = 0;
-        for (let i = 0; i < gameState.digits; i++) {
-            if (guessNumber[i] === target[i]) hits++;
+        for (let i = 0; i < state.game.digits; i++) {
+            if (state.game.guessNumber[i] === target[i]) hits++;
         }
-        guessHistory.push({ guess: guessNumber.join(''), hits });
+        state.game.guessHistory.push({ guess: state.game.guessNumber.join(''), hits });
         updateHistory();
-        if (hits === gameState.digits) {
-            document.getElementById('targetGrid').style.opacity = '1';
-            document.body.innerHTML += `<h1>恭喜您猜对了！用了${guessHistory.length}次</h1>`;
+        if (hits === state.game.digits) {
+            const targetGrid = document.getElementById('targetGrid');
+            targetGrid.style.opacity = '1';
+            targetGrid.querySelectorAll('.cell').forEach(cell => cell.classList.add('correct'));
+            showPopup(`
+                <h2>恭喜您猜对了！</h2>
+                <p>您用了 ${state.game.guessHistory.length} 次</p>
+                <button onclick="resetGame()">再玩一次</button>
+            `);
+        } else {
+            document.getElementById('popup').innerHTML += `
+                <p>命中：${hits}</p>
+                <button onclick="closePopup()">确认</button>
+            `;
         }
-        document.getElementById('popup').innerHTML += `<p>命中：${hits}</p><button onclick="closePopup()">确认</button>`;
     }
 }
 
 function updateHistory() {
     const history = document.getElementById('history');
     history.innerHTML = '';
-    guessHistory.forEach((item, index) => {
+    state.game.guessHistory.forEach((item, index) => {
         history.innerHTML += `<p>${index + 1}. ${item.guess} - 命中: ${item.hits}</p>`;
     });
+    history.scrollTop = history.scrollHeight;
 }
 
+function resetGame() {
+    state.game = {
+        hostReady: false,
+        guestReady: false,
+        digits: 0,
+        targetNumber: [],
+        guessHistory: [],
+        guessNumber: [],
+        penColor: 'black'
+    };
+    currentNumber = [];
+    closePopup();
+    showPage(1);
+}
+
+// 弹窗管理
 function showPopup(content) {
-    document.getElementById('popup').style.display = 'block';
-    document.getElementById('popup').innerHTML = content;
+    const popup = document.getElementById('popup');
+    popup.innerHTML = content;
+    popup.style.display = 'block';
 }
 
 function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('popup').innerHTML = '';
+    const popup = document.getElementById('popup');
+    popup.style.display = 'none';
+    popup.innerHTML = '';
 }
 
+// 画笔功能
 function initCanvas() {
     const canvas = document.getElementById('noteCanvas');
     const ctx = canvas.getContext('2d');
     let drawing = false;
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = state.game.penColor;
 
     canvas.addEventListener('mousedown', () => drawing = true);
     canvas.addEventListener('mouseup', () => drawing = false);
@@ -207,4 +289,17 @@ function initCanvas() {
             ctx.moveTo(e.offsetX, e.offsetY);
         }
     });
+}
+
+function changePenColor(color) {
+    state.game.penColor = color;
+    const canvas = document.getElementById('noteCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = color;
+}
+
+function clearCanvas() {
+    const canvas = document.getElementById('noteCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
