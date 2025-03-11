@@ -1,7 +1,7 @@
 // 全局状态对象，管理页面和游戏状态
 let state = {
-    currentPage: 1, // 默认显示第一页
-    userRole: null, // 用户角色：host 或 guest
+    currentPage: 1,
+    userRole: null,
     game: {
         hostReady: false,
         guestReady: false,
@@ -17,9 +17,9 @@ let state = {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded, initializing page 1');
     initializeUserRole();
-    showPage(1); // 显示第一页
-    initializeEventListeners(); // 设置事件监听器
-    logInitialState(); // 记录初始状态
+    showPage(1);
+    initializeEventListeners();
+    logInitialState();
 });
 
 // 初始化用户角色
@@ -27,6 +27,9 @@ function initializeUserRole() {
     state.userRole = localStorage.getItem('userRole') || (Math.random() < 0.5 ? 'host' : 'guest');
     localStorage.setItem('userRole', state.userRole);
     console.log('User role initialized:', state.userRole);
+    if (state.userRole === 'guest') {
+        showPage(2); // 房客直接进入等待页面
+    }
 }
 
 // 显示指定页面的函数，包含错误处理
@@ -34,7 +37,7 @@ function showPage(pageNum) {
     try {
         document.querySelectorAll('.page').forEach(page => {
             page.style.display = 'none';
-            page.style.opacity = '0'; // 确保隐藏时完全不可见
+            page.style.opacity = '0';
         });
 
         const pageId = `page${pageNum}${state.userRole === 'guest' && pageNum === 2 ? '-waiting' : ''}`;
@@ -42,9 +45,10 @@ function showPage(pageNum) {
 
         if (targetPage) {
             targetPage.style.display = 'block';
-            targetPage.style.opacity = '1'; // 显式设置透明度为 1
+            targetPage.style.opacity = '1';
             state.currentPage = pageNum;
             console.log(`Successfully switched to page: ${pageId}`);
+            if (pageNum === 2) updatePage2();
         } else {
             console.error(`Page not found: ${pageId}`);
             throw new Error(`Failed to find page: ${pageId}`);
@@ -61,7 +65,6 @@ function initializeEventListeners() {
         startButton.addEventListener('click', () => {
             console.log('Start button clicked, switching to page 2');
             showPage(2);
-            updatePage2();
         });
     } else {
         console.error('Start button not found in DOM');
@@ -86,8 +89,23 @@ function updatePage2() {
                 <button onclick="selectUser('玩家B')">玩家B</button>
             `;
             console.log('User list updated for host');
+            // 模拟房客的存在，自动触发准备逻辑
+            setTimeout(() => simulateGuestReady(), 2000); // 2秒后模拟房客准备
         } else {
             console.error('userList element not found');
+        }
+    } else if (state.userRole === 'guest') {
+        showPage(2); // 确保房客进入等待页面
+    }
+}
+
+// 模拟房客准备
+function simulateGuestReady() {
+    if (state.userRole === 'host' && !state.game.guestReady) {
+        state.game.guestReady = true;
+        console.log('Simulated guest ready');
+        if (state.game.hostReady) {
+            showPage(3);
         }
     }
 }
@@ -97,7 +115,7 @@ function selectUser(user) {
     state.game.hostReady = false;
     state.game.guestReady = false;
     showPopup(`
-        <h2>准备好了吗？</h2>
+        <h2>准备好了吗？与 ${user} 配对</h2>
         <button onclick="ready(true, '${user}')">准备好了</button>
         <button onclick="ready(false, '${user}')">再等一会儿</button>
     `);
@@ -106,18 +124,19 @@ function selectUser(user) {
 // 准备逻辑
 function ready(isReady, user) {
     if (isReady) {
-        if (state.game.hostReady && state.game.guestReady) {
-            closePopup();
-            showPage(3);
-        } else {
-            state.game.hostReady = true;
-            showPopup('<h2>等待对方准备...</h2>');
-            setTimeout(() => {
-                state.game.guestReady = true;
+        state.game.hostReady = true;
+        showPopup('<h2>等待对方准备...</h2>');
+        console.log('Host ready, waiting for guest');
+        setTimeout(() => {
+            if (!state.game.guestReady) {
+                state.game.guestReady = true; // 模拟房客准备
+                console.log('Guest simulated as ready');
+            }
+            if (state.game.hostReady && state.game.guestReady) {
                 closePopup();
                 showPage(3);
-            }, 1000);
-        }
+            }
+        }, 2000); // 2秒后模拟准备完成
     } else {
         closePopup();
         showPage(2);
@@ -226,7 +245,7 @@ function updateTargetGrid() {
         for (let i = 0; i < state.game.digits; i++) {
             grid.innerHTML += `<div class="cell">${state.game.targetNumber[i]}</div>`;
         }
-        grid.style.opacity = '0'; // 初始隐藏
+        grid.style.opacity = '0';
     }
 }
 
