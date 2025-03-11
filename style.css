@@ -78,6 +78,15 @@ body {
     font-size: 0.9em;
 }
 
+.btn-refresh {
+    background-color: #ff9800;
+    margin-top: 20px;
+}
+
+.btn-refresh:hover {
+    background-color: #f57c00;
+}
+
 .select {
     padding: 10px;
     font-size: 1.2em;

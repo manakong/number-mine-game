@@ -13,9 +13,9 @@ let state = {
     }
 };
 
-// 模拟多用户计数器（记录点击“开始游戏”的顺序）
+// 模拟多用户状态
 let userCount = 0;
-let hostAssigned = false;
+let users = new Set(); // 存储所有用户的 ID
 
 // 在页面加载时初始化，确保第一页可见
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,19 +28,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 初始化用户角色
 function initializeUserRole() {
-    // 防止重复初始化，检查 localStorage
-    if (!localStorage.getItem('userInitialized')) {
-        userCount = parseInt(localStorage.getItem('userCount') || '0') + 1;
-        localStorage.setItem('userCount', userCount);
-        localStorage.setItem('userInitialized', 'true');
-        state.userRole = userCount === 1 && !hostAssigned ? 'host' : 'guest';
-        if (state.userRole === 'host') hostAssigned = true;
-        localStorage.setItem('userRole', state.userRole);
-        console.log(`User ${userCount} initialized with role: ${state.userRole}`);
-    } else {
-        state.userRole = localStorage.getItem('userRole');
-        console.log('User role restored from localStorage:', state.userRole);
+    // 生成唯一用户 ID
+    const userId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    if (!localStorage.getItem('users')) {
+        localStorage.setItem('users', JSON.stringify([]));
     }
+    let existingUsers = JSON.parse(localStorage.getItem('users'));
+    if (!existingUsers.includes(userId)) {
+        existingUsers.push(userId);
+        localStorage.setItem('users', JSON.stringify(existingUsers));
+        users.add(userId);
+        userCount = existingUsers.length;
+    }
+    state.userRole = userCount === 1 ? 'host' : 'guest';
+    localStorage.setItem('userRole_' + userId, state.userRole);
+    console.log(`User ${userId} initialized with role: ${state.userRole}, total users: ${userCount}`);
     if (state.userRole === 'guest') {
         showPage(2); // 房客直接进入等待页面
     }
@@ -83,6 +85,12 @@ function initializeEventListeners() {
     } else {
         console.error('Start button not found in DOM');
     }
+    const refreshButton = document.getElementById('refreshButton');
+    if (refreshButton) {
+        refreshButton.addEventListener('click', refreshUsers);
+    } else {
+        console.error('Refresh button not found in DOM');
+    }
 }
 
 // 更新第二页内容
@@ -99,23 +107,31 @@ function updatePage2() {
         const userList = document.getElementById('userList');
         if (userList) {
             userList.innerHTML = ''; // 清空现有内容
-            // 模拟其他用户（不显示自己），使用随机图像
-            for (let i = 2; i <= userCount; i++) {
-                const userImage = getRandomImage();
-                userList.innerHTML += `
-                    <div class="user-item">
-                        <div class="user-image" style="background-image: url('${userImage}');"></div>
-                        <button onclick="selectUser('玩家${i}')">玩家${i}</button>
-                    </div>
-                `;
-            }
-            console.log('User list updated for host with', userCount - 1, 'users');
+            let existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            existingUsers.forEach(userId => {
+                if (localStorage.getItem('userRole_' + userId) === 'guest') {
+                    const userImage = getRandomImage();
+                    userList.innerHTML += `
+                        <div class="user-item">
+                            <div class="user-image" style="background-image: url('${userImage}');"></div>
+                            <button onclick="selectUser('${userId}')">玩家${userId.slice(-4)}</button>
+                        </div>
+                    `;
+                }
+            });
+            console.log('User list updated for host with', userList.children.length, 'users');
         } else {
             console.error('userList element not found');
         }
     } else if (state.userRole === 'guest') {
         showPage(2); // 确保房客进入等待页面
     }
+}
+
+// 刷新用户列表
+function refreshUsers() {
+    console.log('Refreshing user list');
+    updatePage2(); // 重新加载用户列表
 }
 
 // 获取随机图像（模拟）
@@ -130,18 +146,18 @@ function getRandomImage() {
 }
 
 // 选择用户并显示准备弹窗
-function selectUser(user) {
+function selectUser(userId) {
     state.game.hostReady = false;
     state.game.guestReady = false;
     showPopup(`
-        <h2>准备好了吗？与 ${user} 配对</h2>
-        <button onclick="ready(true, '${user}')">准备好了</button>
-        <button onclick="ready(false, '${user}')">再等一会儿</button>
+        <h2>准备好了吗？与 玩家${userId.slice(-4)} 配对</h2>
+        <button onclick="ready(true, '${userId}')">准备好了</button>
+        <button onclick="ready(false, '${userId}')">再等一会儿</button>
     `);
 }
 
 // 准备逻辑
-function ready(isReady, user) {
+function ready(isReady, userId) {
     if (isReady) {
         state.game.hostReady = true;
         showPopup('<h2>等待对方准备...</h2>');
@@ -155,7 +171,7 @@ function ready(isReady, user) {
                 closePopup();
                 showPage(3);
                 // 通知房客进入第三页（模拟）
-                if (localStorage.getItem('userRole') === 'guest') {
+                if (localStorage.getItem('userRole_' + userId) === 'guest') {
                     showPage(3);
                 }
             }
@@ -380,8 +396,7 @@ function resetGame() {
         penColor: 'black'
     };
     currentNumber = [];
-    localStorage.removeItem('userInitialized');
-    localStorage.removeItem('userCount');
+    localStorage.clear();
     closePopup();
     showPage(1);
     location.reload(); // 重新加载页面，重新分配角色
