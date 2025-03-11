@@ -1,31 +1,32 @@
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     margin: 0;
-    background: linear-gradient(135deg, #74ebd5, #acb6e5);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: linear-gradient(135deg, #74ebd5, #acb6e5); /* 保留背景渐变 */
 }
 
 .page {
     transition: opacity 0.3s ease;
-}
-
-.page:not([style*="display: block"]) {
-    opacity: 0;
+    opacity: 0; /* 默认隐藏所有页面 */
 }
 
 .page[style*="display: block"] {
-    opacity: 1;
+    opacity: 1; /* 显示时恢复可见 */
+}
+
+/* 第一页特定样式 */
+#page1 {
+    background-color: white; /* 第一页背景改为白色 */
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .container {
     text-align: center;
-    padding: 30px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     max-width: 600px;
     margin: 0 auto;
 }
@@ -41,7 +42,7 @@ body {
     padding: 12px 24px;
     font-size: 1.2em;
     cursor: pointer;
-    background-color: #4CAF50;
+    background-color: #2196F3; /* 按钮改为蓝色 */
     color: white;
     border: none;
     border-radius: 8px;
@@ -49,7 +50,7 @@ body {
 }
 
 .btn:hover {
-    background-color: #45a049;
+    background-color: #1976D2; /* 鼠标悬停变深蓝色 */
     transform: scale(1.05);
 }
 
