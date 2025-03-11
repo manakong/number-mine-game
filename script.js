@@ -521,25 +521,29 @@ function closePopup() {
 // 初始化画布
 function initCanvas() {
     const canvas = document.getElementById('noteCanvas');
-    const ctx = canvas?.getContext('2d');
-    if (ctx) {
-        let drawing = false;
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = state.game.penColor;
-        canvas.addEventListener('mousedown', () => drawing = true);
-        canvas.addEventListener('mouseup', () => drawing = false);
-        canvas.addEventListener('mousemove', (e) => {
-            if (drawing) {
-                ctx.lineTo(e.offsetX, e.offsetY);
-                ctx.stroke();
-            } else {
-                ctx.beginPath();
-                ctx.moveTo(e.offsetX, e.offsetY);
-            }
-        });
-    } else {
-        console.error('Canvas context not available');
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
     }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Canvas context not available');
+        return;
+    }
+    let drawing = false;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = state.game.penColor;
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mousemove', (e) => {
+        if (drawing) {
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+    });
 }
 
 // 更改画笔颜色
